@@ -1,0 +1,67 @@
+<div class="flex items-center justify-center min-h-screen bg-gray-100">
+  <div class="w-full max-w-lg px-4 py-8 bg-white rounded-lg shadow-md">
+    <h1 class="text-3xl font-bold mb-6">{{ isEditMode ? 'Edit' : 'Add' }} Task</h1>
+
+    <form [formGroup]="taskForm" (ngSubmit)="onSubmit()">
+      <div class="mb-4">
+        <label class="block text-gray-700 text-sm font-bold mb-2">
+          Title
+        </label>
+        <input
+          formControlName="title"
+          type="text"
+          class="w-full px-3 py-2 border rounded focus:outline-none focus:border-blue-500"
+          [class.border-red-500]="showError('title')"
+        >
+        <p *ngIf="showError('title')" class="text-red-500 text-xs mt-1">
+          Title is required
+        </p>
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-gray-700 text-sm font-bold mb-2">
+          Description
+        </label>
+        <textarea
+          formControlName="description"
+          rows="3"
+          class="w-full px-3 py-2 border rounded focus:outline-none focus:border-blue-500"
+          [class.border-red-500]="showError('description')"
+        ></textarea>
+        <p *ngIf="showError('description')" class="text-red-500 text-xs mt-1">
+          Description is required
+        </p>
+      </div>
+
+      <div class="mb-6">
+        <label class="block text-gray-700 text-sm font-bold mb-2">
+          Status
+        </label>
+        <select
+          formControlName="status"
+          class="w-full px-3 py-2 border rounded focus:outline-none focus:border-blue-500"
+        >
+          <option value="Pending">Pending</option>
+          <option value="Completed">Completed</option>
+        </select>
+      </div>
+
+      <div class="flex justify-between">
+        <button
+          type="submit"
+          [disabled]="taskForm.invalid"
+          class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+        >
+          {{ isEditMode ? 'Update' : 'Create' }} Task
+        </button>
+        <button
+          type="button"
+          (click)="onCancel()"
+          class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
