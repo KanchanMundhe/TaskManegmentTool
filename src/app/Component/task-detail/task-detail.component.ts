@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Task } from 'src/app/modal/task.model';
 import { TaskServiceService } from 'src/app/services/task.service.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-task-detail',
@@ -36,11 +37,23 @@ export class TaskDetailComponent {
   }
 
   deleteTask(): void {
-    if (this.task && confirm('Are you sure you want to delete this task?')) {
-      this.taskService.deleteTask(this.task.id).subscribe(() => {
-        this.router.navigate(['/tasks']);
-      });
-    }
+
+
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't to Delete!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!"
+    }).then((result) => {
+      if (this.task && result.isConfirmed) {
+        this.taskService.deleteTask(this.task.id).subscribe(() => {
+          this.router.navigate(['/tasks']);
+        });
+      }
+    });
   }
 
   goBack(): void {
