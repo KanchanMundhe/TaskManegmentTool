@@ -1,17 +1,27 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, map, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, combineLatest, map, throwError } from 'rxjs';
 import { Task } from '../modal/task.model';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { FilterCriteria } from '../tasks/components/search-filter/search-filter.component';
 
 @Injectable({
   providedIn: 'root'
 })
 export class TaskServiceService {
   private tasks$ = new BehaviorSubject<Task[]>([]);
-  private baseUrl = 'api/tasks'; // Simulated API URL
+  private baseUrl = 'api/tasks'; 
+  private filterCriteria$ = new BehaviorSubject<FilterCriteria>({
+    search: '',
+    status: 'All',
+    sortBy: 'title',
+    sortOrder: 'asc'
+  });
 
   constructor(private http: HttpClient) {
     this.loadInitialTasks();
+    this.filterCriteria$.subscribe(criteria => {
+      console.log('Filter criteria updated in service:', criteria);
+    });
   }
 
   private loadInitialTasks(): void {
@@ -101,5 +111,55 @@ export class TaskServiceService {
     }
     return throwError(() => new Error(errorMessage));
   }
-}
 
+  setFilterCriteria(criteria: FilterCriteria): void {
+    console.log('Setting new filter criteria:', criteria);
+    this.filterCriteria$.next(criteria);
+  }
+  getFilteredTasks(): Observable<Task[]> {
+    return combineLatest([this.tasks$, this.filterCriteria$]).pipe(
+      map(([tasks, criteria]) => {
+        console.log('Filtering tasks with criteria:', criteria);
+        console.log('Original tasks:', tasks);
+
+        let filteredTasks = [...tasks];
+
+        // Apply search filter
+        if (criteria.search) {
+          const searchLower = criteria.search.toLowerCase();
+          filteredTasks = filteredTasks.filter(task =>
+            task.title.toLowerCase().includes(searchLower) ||
+            task.description.toLowerCase().includes(searchLower)
+          );
+        }
+
+        // Apply status filter
+        if (criteria.status && criteria.status !== 'All') {
+          filteredTasks = filteredTasks.filter(task => task.status === criteria.status);
+        }
+
+        // Apply sorting
+        filteredTasks.sort((a, b) => {
+          let comparison = 0;
+          switch (criteria.sortBy) {
+            case 'title':
+              comparison = a.title.localeCompare(b.title);
+              break;
+            case 'status':
+              comparison = a.status.localeCompare(b.status);
+              break;
+            case 'createdAt':
+              comparison = (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0);
+              break;
+            default:
+              comparison = 0;
+          }
+          return criteria.sortOrder === 'asc' ? comparison : -comparison;
+        });
+
+        console.log('Filtered tasks:', filteredTasks);
+        return filteredTasks;
+      })
+    );
+  }
+}
